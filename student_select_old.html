@@ -36,21 +36,17 @@
             if (students.length > 0) { document.getElementById('startBtn').disabled = false; document.getElementById('startBtn').innerText = "🎲 학생 뽑기 시작!"; }
         }
 
-        async function animateBox(box, index, winningChar) {
+        async function animateBox(box, index, winningChar, duration) {
             box.classList.remove('slot-fixed');
             const startTime = Date.now();
-            // 박스마다 멈추는 시간 간격을 더 길게 벌려줍니다 (조마조마한 시간 추가)
-            const duration = 2000 + (index * 1200); 
             
             while (Date.now() - startTime < duration) {
                 const randomName = students[Math.floor(Math.random() * students.length)];
-                // 글자가 없으면(2글자 이름의 3번째 자리 등) 빈칸으로 표시
                 box.innerText = randomName[index] || '';
                 const progress = (Date.now() - startTime) / duration;
                 await new Promise(r => setTimeout(r, 50 + (Math.pow(progress, 3) * 600))); 
             }
             
-            // [해결] 2글자 이름 처리: 값이 없으면(undefined) 공백으로 처리
             box.innerText = winningChar || '';
             box.classList.add('slot-fixed');
         }
@@ -61,8 +57,11 @@
             const winner = students[Math.floor(Math.random() * students.length)];
             const boxes = [document.getElementById('s0'), document.getElementById('s1'), document.getElementById('s2')];
             
-            // 3개 박스를 병렬로 돌림
-            await Promise.all(boxes.map((box, i) => animateBox(box, i, winner[i])));
+            // 멈추는 순서를 매번 랜덤하게 섞음
+            let durations = [2000, 3200, 4400];
+            durations.sort(() => Math.random() - 0.5); 
+            
+            await Promise.all(boxes.map((box, i) => animateBox(box, i, winner[i], durations[i])));
             
             document.getElementById('winnerResult').innerText = "🎉 당첨자: " + winner + " 🎉";
             document.getElementById('winnerResult').classList.add('show');
