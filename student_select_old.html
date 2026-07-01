@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>학생 슬롯머신</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        body { background: radial-gradient(circle, #232526 0%, #414345 100%); color: white; text-align: center; font-family: 'Noto Sans KR', sans-serif; overflow: hidden; height: 100vh; margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        h1 { color: #FFD700; margin-bottom: 40px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .slot-container { display: flex; justify-content: center; gap: 25px; margin-bottom: 50px; }
+        .slot-box { background: linear-gradient(145deg, #2a2a2a, #1a1a1a); border: 4px solid #FFD700; border-radius: 20px; font-size: 100px; font-weight: bold; width: 180px; height: 220px; display: flex; justify-content: center; align-items: center; color: #FFFFFF; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .slot-fixed { background: linear-gradient(145deg, #444, #222); color: #FFD700; border-color: #FF4500; transform: scale(1.05); box-shadow: 0 20px 30px rgba(255,69,0,0.4); }
+        button { font-size: 28px; padding: 20px 60px; cursor: pointer; background: linear-gradient(45deg, #FFD700, #FFA500); border: none; border-radius: 50px; font-weight: bold; color: #333; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.3s; }
+        button:disabled { background: #777; cursor: not-allowed; }
+        #status { margin-top: 30px; color: #aaa; }
+        #winnerResult { font-size: 60px; font-weight: bold; margin-top: 30px; color: #FFD700; opacity: 0; transition: 0.3s; }
+        #winnerResult.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <h1>🍀 행운의 주인공 추첨 🍀</h1>
+    <div class="slot-container">
+        <div id="s0" class="slot-box">?</div>
+        <div id="s1" class="slot-box">?</div>
+        <div id="s2" class="slot-box">?</div>
+    </div>
+    <button id="startBtn" onclick="startSlot()" disabled>데이터 로딩 중...</button>
+    <div id="status">연결 확인 중...</div>
+    <div id="winnerResult"></div>
+
+    <script>
+        let students = [];
+        function handleData(data) {
+            students = data.filter(n => n && typeof n === 'string' && n.trim().length > 0);
+            document.getElementById('status').innerText = "총 " + students.length + "명 로드 완료";
+            if (students.length > 0) { document.getElementById('startBtn').disabled = false; document.getElementById('startBtn').innerText = "🎲 학생 뽑기 시작!"; }
+        }
+
+        async function animateBox(box, index, winningChar) {
+            box.classList.remove('slot-fixed');
+            const startTime = Date.now();
+            // 박스마다 멈추는 시간 간격을 더 길게 벌려줍니다 (조마조마한 시간 추가)
+            const duration = 2000 + (index * 1200); 
+            
+            while (Date.now() - startTime < duration) {
+                const randomName = students[Math.floor(Math.random() * students.length)];
+                // 글자가 없으면(2글자 이름의 3번째 자리 등) 빈칸으로 표시
+                box.innerText = randomName[index] || '';
+                const progress = (Date.now() - startTime) / duration;
+                await new Promise(r => setTimeout(r, 50 + (Math.pow(progress, 3) * 600))); 
+            }
+            
+            // [해결] 2글자 이름 처리: 값이 없으면(undefined) 공백으로 처리
+            box.innerText = winningChar || '';
+            box.classList.add('slot-fixed');
+        }
+
+        async function startSlot() {
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('winnerResult').classList.remove('show');
+            const winner = students[Math.floor(Math.random() * students.length)];
+            const boxes = [document.getElementById('s0'), document.getElementById('s1'), document.getElementById('s2')];
+            
+            // 3개 박스를 병렬로 돌림
+            await Promise.all(boxes.map((box, i) => animateBox(box, i, winner[i])));
+            
+            document.getElementById('winnerResult').innerText = "🎉 당첨자: " + winner + " 🎉";
+            document.getElementById('winnerResult').classList.add('show');
+            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+            document.getElementById('startBtn').disabled = false;
+        }
+    </script>
+    <script src="https://script.google.com/macros/s/AKfycbywliT7xugT-h-P2jlNZC-9u4yUMuXaTaK1Hlxd1Su2DOtZtMrz2U9XsFW9h129Er0Weg/exec?callback=handleData"></script>
+</body>
+</html>
