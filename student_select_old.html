@@ -72,9 +72,12 @@
             
             const stopIndex = winningIndices.length > 0 ? winningIndices[Math.floor(Math.random() * winningIndices.length)] : (students.length * 14);
             const targetY = -(stopIndex * itemHeight);
-            
+
+            const randomValue = Math.floor(Math.random() * 5) + 1; // 1, 2, 3, 4, 5
+            const bounce = 1+randomValue * 0.01;
+
             // [요청반영] 마지막에 더 느릿하게 멈추도록 easing(가속도) 설정 변경
-            reel.style.transition = `transform ${duration/1000}s cubic-bezier(0.15, 0.75, 0.5, 1.05)`;
+            reel.style.transition = `transform ${duration/1000}s cubic-bezier(0.15, 0.75, 0.5, ${bounce})`;
             reel.style.transform = `translateY(${targetY}px)`;
 
             await new Promise(r => setTimeout(r, duration));
@@ -86,7 +89,7 @@
             document.getElementById('winnerResult').classList.remove('show');
             const winner = students[Math.floor(Math.random() * students.length)];
             
-            let durations = [4000, 6000, 8000];
+            let durations = [4000, 15000, 20000];
             for (let i = durations.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [durations[i], durations[j]] = [durations[j], durations[i]];
